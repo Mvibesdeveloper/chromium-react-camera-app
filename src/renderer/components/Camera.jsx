@@ -36,10 +36,21 @@ export default function Camera() {
   }, []);
 
   const startCamera = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-    videoRef.current.srcObject = stream;
-    videoRef.current.play();
-    requestAnimationFrame(processFrame);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: 'user' },
+          width: { ideal: 720 },
+          height: { ideal: 1280 }
+        },
+        audio: false
+      });
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play();
+      requestAnimationFrame(processFrame);
+    } catch (err) {
+      alert("Camera permission was denied or not supported: " + err.message);
+    }
   };
 
   const processFrame = async () => {
@@ -94,7 +105,7 @@ export default function Camera() {
         <p>⏳ Loading AI models...</p>
       ) : (
         <>
-          <video ref={videoRef} style={{ display: 'none' }} />
+          <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
           <canvas ref={canvasRef} />
           <button onClick={startCamera}>Start Camera</button>
         </>

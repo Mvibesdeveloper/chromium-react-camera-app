@@ -24,8 +24,7 @@ export default function Camera() {
       const net = await bodyPix.load();
       const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
       const faceNet = await faceLandmarksDetection.load(model, {
-        maxFaces: 1,
-        shouldLoadIrisModel: false
+        runtime: 'tfjs',
       });
       netRef.current = net;
       faceNetRef.current = faceNet;

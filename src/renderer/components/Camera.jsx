@@ -1,4 +1,4 @@
-// 📸 Real-Time Mobile Camera with Enhanced AI Filters for Telegram Mini App
+// 📸 Real-Time Mobile Camera with Enhanced AI Filters (Web Version)
 
 import React, { useState, useEffect, useRef } from 'react';
 import * as tf from '@tensorflow/tfjs';
@@ -14,17 +14,10 @@ export default function Camera() {
   const chunksRef = useRef([]);
   const netRef = useRef(null);
   const faceNetRef = useRef(null);
-  const [isTelegramMobile, setIsTelegramMobile] = useState(false);
   const [loading, setLoading] = useState(true);
   const [recording, setRecording] = useState(false);
   const [deviceId, setDeviceId] = useState(null);
   const [devices, setDevices] = useState([]);
-
-  useEffect(() => {
-    const isTelegram = window.Telegram?.WebApp !== undefined;
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    setIsTelegramMobile(isTelegram && isMobile);
-  }, []);
 
   useEffect(() => {
     const setup = async () => {
@@ -128,10 +121,6 @@ export default function Camera() {
     mediaRecorderRef.current?.stop();
     setRecording(false);
   };
-
-  if (!isTelegramMobile) {
-    return <p>This feature is only available on mobile Telegram Mini Apps.</p>;
-  }
 
   return (
     <div>

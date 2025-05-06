@@ -102,14 +102,17 @@ export default function Camera() {
     <div>
       <h2>🎥 Live Camera with Enhanced AI Filters</h2>
       {loading ? (
-        <p>⏳ Loading AI models...</p>
-      ) : (
-        <>
-          <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
-          <canvas ref={canvasRef} />
-          <button onClick={startCamera}>Start Camera</button>
-        </>
-      )}
-    </div>
-  );
-}
+  <p>⏳ Loading AI models...</p>
+) : (
+  <>
+    <button onClick={startCamera}>📸 Tap to Start Camera</button>
+    <video
+      ref={videoRef}
+      autoPlay
+      playsInline
+      muted
+      style={{ width: '100%', maxHeight: '400px', marginTop: '10px' }}
+    />
+    <canvas ref={canvasRef} style={{ width: '100%' }} />
+  </>
+)}

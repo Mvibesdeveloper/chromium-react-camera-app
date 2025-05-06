@@ -4,10 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
 import * as bodyPix from '@tensorflow-models/body-pix';
-import {
-  load as loadFaceLandmarksModel,
-  SupportedPackages
-} from '@tensorflow-models/face-landmarks-detection';
+import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 
 export default function Camera() {
   const videoRef = useRef();
@@ -25,7 +22,7 @@ export default function Camera() {
     const setup = async () => {
       await tf.setBackend('webgl');
       const net = await bodyPix.load();
-      const faceNet = await loadFaceLandmarksModel(SupportedPackages.mediapipeFacemesh);
+      const faceNet = await faceLandmarksDetection.load(faceLandmarksDetection.SupportedPackages.mediapipeFacemesh);
       netRef.current = net;
       faceNetRef.current = faceNet;
       setLoading(false);

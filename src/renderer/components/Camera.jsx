@@ -10,10 +10,15 @@ import '@tensorflow-models/face-landmarks-detection/dist/face-landmarks-detectio
 export default function Camera() {
   const videoRef = useRef();
   const canvasRef = useRef();
+  const mediaRecorderRef = useRef();
+  const chunksRef = useRef([]);
   const netRef = useRef(null);
   const faceNetRef = useRef(null);
   const [isTelegramMobile, setIsTelegramMobile] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [recording, setRecording] = useState(false);
+  const [deviceId, setDeviceId] = useState(null);
+  const [devices, setDevices] = useState([]);
 
   useEffect(() => {
     const isTelegram = window.Telegram?.WebApp !== undefined;
@@ -37,19 +42,26 @@ export default function Camera() {
 
   const startCamera = async () => {
     try {
+      const devs = await navigator.mediaDevices.enumerateDevices();
+      const videoInputs = devs.filter(d => d.kind === 'videoinput');
+      setDevices(videoInputs);
+      const selectedId = deviceId || videoInputs[0]?.deviceId;
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: { ideal: 'user' },
+          deviceId: selectedId ? { exact: selectedId } : undefined,
           width: { ideal: 720 },
-          height: { ideal: 1280 }
+          height: { ideal: 1280 },
+          facingMode: 'environment'
         },
         audio: false
       });
+
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
       requestAnimationFrame(processFrame);
     } catch (err) {
-      alert("Camera permission was denied or not supported: " + err.message);
+      alert("Camera permission denied or unsupported: " + err.message);
     }
   };
 
@@ -71,9 +83,9 @@ export default function Camera() {
 
     for (let i = 0; i < segmentation.data.length; i++) {
       if (!segmentation.data[i]) {
-        data[i * 4 + 0] = data[i * 4 + 0] * 0.25; // background darker
-        data[i * 4 + 1] = data[i * 4 + 1] * 0.25;
-        data[i * 4 + 2] = data[i * 4 + 2] * 0.25;
+        data[i * 4 + 0] *= 0.25;
+        data[i * 4 + 1] *= 0.25;
+        data[i * 4 + 2] *= 0.25;
       }
     }
 
@@ -83,7 +95,7 @@ export default function Camera() {
         const y = Math.floor(kp.y);
         const i = (y * canvas.width + x) * 4;
         if (i >= 0 && i < data.length - 4) {
-          data[i + 0] = Math.min(255, data[i + 0] * 1.2); // brighten skin tones
+          data[i + 0] = Math.min(255, data[i + 0] * 1.2);
           data[i + 1] = Math.min(255, data[i + 1] * 1.2);
           data[i + 2] = Math.min(255, data[i + 2] * 1.2);
         }
@@ -94,25 +106,53 @@ export default function Camera() {
     requestAnimationFrame(processFrame);
   };
 
+  const startRecording = () => {
+    const stream = canvasRef.current.captureStream();
+    const mediaRecorder = new MediaRecorder(stream);
+    mediaRecorderRef.current = mediaRecorder;
+    chunksRef.current = [];
+    mediaRecorder.ondataavailable = e => chunksRef.current.push(e.data);
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'recording.webm';
+      a.click();
+    };
+    mediaRecorder.start();
+    setRecording(true);
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setRecording(false);
+  };
+
   if (!isTelegramMobile) {
     return <p>This feature is only available on mobile Telegram Mini Apps.</p>;
   }
 
   return (
     <div>
-      <h2>🎥 Live Camera with Enhanced AI Filters</h2>
+      <h2>🎥 Live AI Camera with Effects</h2>
       {loading ? (
-  <p>⏳ Loading AI models...</p>
-) : (
-  <>
-    <button onClick={startCamera}>📸 Tap to Start Camera</button>
-    <video
-      ref={videoRef}
-      autoPlay
-      playsInline
-      muted
-      style={{ width: '100%', maxHeight: '400px', marginTop: '10px' }}
-    />
-    <canvas ref={canvasRef} style={{ width: '100%' }} />
-  </>
-)}
+        <p>⏳ Loading AI models...</p>
+      ) : (
+        <>
+          <select onChange={e => setDeviceId(e.target.value)}>
+            {devices.map(d => (
+              <option key={d.deviceId} value={d.deviceId}>{d.label}</option>
+            ))}
+          </select>
+          <button onClick={startCamera}>Start Camera</button>
+          <button onClick={recording ? stopRecording : startRecording}>
+            {recording ? 'Stop Recording' : 'Start Recording'}
+          </button>
+          <video ref={videoRef} style={{ display: 'none' }} playsInline muted />
+          <canvas ref={canvasRef} style={{ width: '100%' }} />
+        </>
+      )}
+    </div>
+  );
+}

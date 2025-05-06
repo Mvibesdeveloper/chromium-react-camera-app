@@ -22,7 +22,11 @@ export default function Camera() {
     const setup = async () => {
       await tf.setBackend('webgl');
       const net = await bodyPix.load();
-      const faceNet = await faceLandmarksDetection.load('mediapipeFacemesh');
+      const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
+      const faceNet = await faceLandmarksDetection.load(model, {
+        maxFaces: 1,
+        shouldLoadIrisModel: false
+      });
       netRef.current = net;
       faceNetRef.current = faceNet;
       setLoading(false);

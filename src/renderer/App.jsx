@@ -1,23 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import Camera from './components/Camera'; // ✅ Import the new Camera component
 
 export default function App() {
-  const videoRef = useRef();
-
-  useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      })
-      .catch(err => {
-        console.error('Error accessing camera:', err);
-      });
-  }, []);
-
   return (
     <div>
-      <h1>Camera Test</h1>
-      <video ref={videoRef} autoPlay playsInline style={{ width: '100%' }} />
+      <Camera /> {/* ✅ Use the new AI-enhanced camera */}
     </div>
   );
 }
